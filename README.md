@@ -43,7 +43,7 @@
    - 失败或超时直接返回
    - 支付服务结束
 
-
+![1572067014364](E:\Anaconda\workspace\seckilling\00e0f2c7a2d398d3a8f8c64b151f248.png)
 
 ### 基本流程
 
