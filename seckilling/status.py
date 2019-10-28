@@ -14,6 +14,11 @@
         "order:"+str(goods_id)
         "order:"+str(goods_id)+":"+"overtime"
         "order:"+str(goods_id)+":"+"deal"
+    改：
+        除了order对应关系需要获取值 仍然用字典
+
+        由于只需要判断是否存在 redis 中集合的底层实现是整数链表或哈希表
+        所以此处用集合可以达到同样的效率，而不需要设置键值。
 
 """
 from conn import redis_conn
@@ -54,14 +59,11 @@ def create_order(order_info):
     user_id = order_info.get("user_id")
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
-    if user_id is None or order_id is None or goods_id is None:
-        return False
 
-    order_map = {
-        str(user_id): order_id
-    }
-    redis_conn.hmset("order:"+str(goods_id), order_map)
+    redis_conn.hset("order:"+str(goods_id), str(user_id), str(order_id))
     return True
+    # else:
+    #     return False
 
 
 """
@@ -84,10 +86,11 @@ def check_order(order_info):
     goods_id = order_info.get("goods_id")
 
     # 如果已存在超时队列
-    if redis_conn.hexists("order:"+str(goods_id)+":"+"overtime", order_id):
+    if redis_conn.sismember("order:"+str(goods_id)+":"+"overtime", order_id):
         return False
     else:
         return user_id == redis_conn.hget("order:"+str(goods_id), order_id)
+
 
 
 def enter_overtime(order_info):
@@ -99,15 +102,16 @@ def enter_overtime(order_info):
     :param uuid:
     :return:
     """
-    # user_id = order_info.get("user_id")
+    user_id = order_info.get("user_id")
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
 
     if _is_deal(order_info):
         return False
     else:
-        redis_conn.hset("order:"+str(goods_id)+":"+"overtime", order_id)
+        redis_conn.sadd("order:"+str(goods_id)+":"+"overtime", order_id)
         return True
+
 
 
 def _is_deal(order_info):
@@ -118,11 +122,13 @@ def _is_deal(order_info):
     :param uuid:
     :return:
     """
+    user_id = order_info.get("user_id")
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
-    if redis_conn.hexists("order:"+str(goods_id)+":"+"deal", order_id):
+    if redis_conn.sismember("order:"+str(goods_id)+":"+"deal", order_id):
         return True
     return False
+
 
 
 def _is_overtime(order_info):
@@ -133,9 +139,11 @@ def _is_overtime(order_info):
     :param uuid:
     :return:
     """
+    user_id = order_info.get("user_id")
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
-    if redis_conn.hexists("order:"+str(goods_id)+":"+"overtime", order_id):
+
+    if redis_conn.sismember("order:"+str(goods_id)+":"+"overtime", order_id):
         return True
     return False
 
@@ -148,14 +156,16 @@ def paid_order(order_info):
     :param uuid:
     :return:
     """
+    user_id = order_info.get("user_id")
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
 
     if _is_overtime(order_info):
         return False
     else:
-        redis_conn.hset("order:" + str(goods_id) + ":" + "deal", order_id)
+        redis_conn.sadd("order:" + str(goods_id) + ":" + "deal", order_id)
         return True
+
 
 if __name__ == '__main__':
     create_order(order_info = {

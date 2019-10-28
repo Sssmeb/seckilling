@@ -10,11 +10,13 @@
     只要存在消息 就读出， 然后写入mysql订单历史
     此时交易未成交 所以交易状态是未完成
 """
-from conn import rabbitmq_conn
+import pika
+from settings import RABBITMQ_HOST
 from utils import insert_order
 
 
 def start_order_consume(goods_id):
+    rabbitmq_conn = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = rabbitmq_conn.channel()
 
     exchange = 'order.exchange'
@@ -29,13 +31,13 @@ def start_order_consume(goods_id):
 
     channel.queue_bind(exchange=exchange,
                        queue=queue,
-                       routing_key='order.' + goods_id + '.' + '*')
+                       routing_key='order.' + str(goods_id) + '.' + '*')
 
     channel.basic_consume(on_message_callback=insert_order,
-                          queue='order',
+                          queue=queue,
                           auto_ack=False)
 
-    yield
+
 
 
 if __name__ == '__main__':

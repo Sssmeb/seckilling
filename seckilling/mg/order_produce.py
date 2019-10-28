@@ -9,7 +9,7 @@
 
 """
 from conn import rabbitmq_conn
-
+import json
 
 def enter_order_queue(order_info):
     """
@@ -33,7 +33,8 @@ def enter_order_queue(order_info):
     routing_key = 'order.' + str(goods_id) + '.' + str(user_id)
 
     channel.exchange_declare(exchange=exchange,
-                             exchange_type='topic')
+                             exchange_type='topic',
+                             durable=True)
 
     channel.queue_declare(queue=queue,
                           durable=True)
@@ -41,8 +42,11 @@ def enter_order_queue(order_info):
     channel.queue_bind(exchange=exchange,
                        queue=queue)
 
-    message = str(goods_id) + ',' + str(user_id) + ',' + str(order_id)
+    # message = str(goods_id) + ',' + str(user_id) + ',' + str(order_id)
+    message = json.dumps(order_info)
 
     channel.basic_publish(exchange=exchange,
                           routing_key=routing_key,
                           body=message)
+
+    return True

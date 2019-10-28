@@ -19,7 +19,7 @@
             - goods_id
             - 库存数量
 """
-from conn import mysql_conn
+from conn import mysql_pool
 
 
 def storage_insert_order(order_info):
@@ -29,25 +29,26 @@ def storage_insert_order(order_info):
     :param order_info:
     :return:
     """
-    order_msg = order_info.split(',')
-    if len(order_msg) == 3:
-        goods_id, user_id, order_id = order_msg
-        cur = mysql_conn.cursor()
+    mysql_conn = mysql_pool.connection()
+    cur = mysql_conn.cursor()
 
-        sql = "insert into order (goods_id, user_id, order_id) values (%s, %s, %s)"
-        param = (goods_id, user_id, order_id)
-        try:
-            cur.execute(sql, param)
-        except Exception as e:
-            mysql_conn.rollback()
-            print(e)
-            return False
-        finally:
-            cur.close()
-            mysql_conn.close()
-        return True
-    else:
+    user_id = order_info.get("user_id")
+    order_id = order_info.get("order_id")
+    goods_id = order_info.get("goods_id")
+
+    sql = "insert into order_history (goods_id, user_id, order_id) values (%s, %s, %s)"
+    param = (goods_id, user_id, order_id)
+    try:
+        cur.execute(sql, param)
+    except Exception as e:
+        mysql_conn.rollback()
+        print(e)
         return False
+    finally:
+        cur.close()
+        mysql_conn.close()
+    return True
+
 
 
 def storage_update_order(order_info, flag=0):
@@ -57,26 +58,27 @@ def storage_update_order(order_info, flag=0):
     :param order_info: message = str(goods_id) + ',' + str(user_id) + ',' + str(order_id)
     :return:
     """
-    order_msg = order_info.split(',')
-    if len(order_msg) == 3:
-        goods_id, user_id, order_id = order_msg
-        cur = mysql_conn.cursor()
+    mysql_conn = mysql_pool.connection()
+    cur = mysql_conn.cursor()
 
-        sql = "UPDATE order SET status=-1 where goods_id=%s and user_id=%s and order_id=%s"
-        param = (goods_id, user_id, order_id)
-        try:
-            cur.execute(sql, param)
-        except Exception as e:
-            mysql_conn.rollback()
-            print(e)
-            return False
-        finally:
-            cur.close()
-            mysql_conn.close()
-        return True
-    else:
-        # 参数错误
+    user_id = order_info.get("user_id")
+    order_id = order_info.get("order_id")
+    goods_id = order_info.get("goods_id")
+
+
+    sql = "UPDATE order_history SET status=-1 where goods_id=%s and user_id=%s and order_id=%s"
+    param = (goods_id, user_id, order_id)
+    try:
+        cur.execute(sql, param)
+    except Exception as e:
+        mysql_conn.rollback()
+        print(e)
         return False
+    finally:
+        cur.close()
+        mysql_conn.close()
+    return True
+
 
 
 def storage_update_storage(order_info):
@@ -86,23 +88,23 @@ def storage_update_storage(order_info):
     :param order_info:
     :return:
     """
-    order_msg = order_info.split(',')
-    if len(order_msg) == 3:
-        goods_id, user_id, order_id = order_msg
-        cur = mysql_conn.cursor()
+    mysql_conn = mysql_pool.connection()
+    cur = mysql_conn.cursor()
 
-        sql = "UPDATE storage SET quantity=quantity-1 where id=%s"
-        param = (goods_id)
-        try:
-            cur.execute(sql, param)
-        except Exception as e:
-            mysql_conn.rollback()
-            print(e)
-            return False
-        finally:
-            cur.close()
-            mysql_conn.close()
-        return True
-    else:
-        # 参数错误
+    # user_id = order_msg.get("user_id")
+    # order_id = order_msg.get("order_id")
+    goods_id = order_info.get("goods_id")
+
+    sql = "UPDATE storage SET quantity=quantity-1 where id=%s"
+    param = (goods_id)
+    try:
+        cur.execute(sql, param)
+    except Exception as e:
+        mysql_conn.rollback()
+        print(e)
         return False
+    finally:
+        cur.close()
+        mysql_conn.close()
+    return True
+

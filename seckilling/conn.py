@@ -30,7 +30,6 @@ mysql_pool = PooledDB(pymysql, 100,
                       passwd=MYSQL_PASSWORD,
                       db=MYSQL_DB,
                       charset=MYSQL_CHARSET)
-mysql_conn = mysql_pool.connection()
 
 """
 show variables like 'max_connections'; 查看数据库最大连接数

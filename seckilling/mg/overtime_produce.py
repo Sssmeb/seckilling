@@ -9,7 +9,7 @@
 
 """
 from conn import rabbitmq_conn
-
+import json
 
 def enter_overtime_queue(order_info, timeout=15):
     """
@@ -63,7 +63,11 @@ def enter_overtime_queue(order_info, timeout=15):
     channel.queue_bind(exchange=delay_exchange, queue=delay_queue)
 
     # routing_key = 'overtime.' + str(goods_id) + '.' + str(user_id)
-    message = str(goods_id) + ',' + str(user_id) + ',' + str(order_id)
+    # message = str(goods_id) + ',' + str(user_id) + ',' + str(order_id)
+    message = json.dumps(order_info)
 
     channel.basic_publish(exchange=delay_exchange,
-                          body=message)
+                          body=message,
+                          routing_key="")
+
+    return True

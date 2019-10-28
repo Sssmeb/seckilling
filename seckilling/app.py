@@ -12,7 +12,7 @@ from mg import start_consume
 
 
 app = Flask(__name__)
-
+start_consume(1)
 
 @app.route('/')
 def hello_world():
@@ -49,17 +49,23 @@ def purchase():
     if flag:
         # 生成唯一的订单号
         order_id = uuid.uuid1()
+
         order_info = {
             "goods_id": goods_id,
             "user_id": user_id,
-            "order_id": order_id
+            "order_id": str(order_id)
         }
+        # order_info = str(goods_id) + ',' + str(user_id) + ',' + str(order_id)
         try:
             create_order(order_info)
 
             enter_order_queue(order_info)
 
             enter_overtime_queue(order_info)
+            res["status"] = True
+            res["msg"] = "抢购成功，请在15分钟之内付款！"
+            return jsonify(res)
+
         except Exception as e:
             print("log: ", e)
             res["status"] = False
@@ -71,6 +77,7 @@ def purchase():
         res["status"] = False
         res["msg"] = "商品已售罄"
         return jsonify(res), 200
+
 
 @app.route('/pay')
 def pay(user_id, order_id):
@@ -90,5 +97,4 @@ def pay(user_id, order_id):
 
 
 if __name__ == '__main__':
-    # start_consume(1)
     app.run()

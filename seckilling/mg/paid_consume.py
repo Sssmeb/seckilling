@@ -12,18 +12,20 @@
         2. 修改库存表 -1
         3. 写入redis 标识成功
 """
-from conn import rabbitmq_conn
 from utils import update_storage
-
+import pika
+from settings import RABBITMQ_HOST
 
 def start_paid_consume(goods_id):
+    rabbitmq_conn = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = rabbitmq_conn.channel()
 
     exchange = 'paid.exchange'
     queue = 'paid.queue'
 
     channel.exchange_declare(exchange=exchange,
-                             exchange_type='topic')
+                             exchange_type='topic',
+                             durable=True)
 
     channel.queue_declare(queue=queue,
                           durable=True)
@@ -33,7 +35,6 @@ def start_paid_consume(goods_id):
                        routing_key='order.' + str(goods_id) + '.' + '*')
 
     channel.basic_consume(on_message_callback=update_storage,
-                          queue='order',
+                          queue=queue,
                           auto_ack=False)
 
-    yield
