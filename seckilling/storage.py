@@ -20,6 +20,7 @@
             - 库存数量
 """
 from conn import mysql_pool
+import pymysql
 
 
 def storage_insert_order(order_info):
@@ -29,7 +30,8 @@ def storage_insert_order(order_info):
     :param order_info:
     :return:
     """
-    mysql_conn = mysql_pool.connection()
+    # mysql_conn = mysql_pool.connection()
+    mysql_conn = pymysql.connect(host='localhost', user='root', passwd='root', db='seckilling', port=3306)
     cur = mysql_conn.cursor()
 
     user_id = order_info.get("user_id")
@@ -40,6 +42,8 @@ def storage_insert_order(order_info):
     param = (goods_id, user_id, order_id)
     try:
         cur.execute(sql, param)
+        mysql_conn.commit()
+        return True
     except Exception as e:
         mysql_conn.rollback()
         print(e)
@@ -47,7 +51,6 @@ def storage_insert_order(order_info):
     finally:
         cur.close()
         mysql_conn.close()
-    return True
 
 
 
@@ -65,11 +68,12 @@ def storage_update_order(order_info, flag=0):
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
 
-
     sql = "UPDATE order_history SET status=-1 where goods_id=%s and user_id=%s and order_id=%s"
     param = (goods_id, user_id, order_id)
     try:
         cur.execute(sql, param)
+        mysql_conn.commit()
+        return True
     except Exception as e:
         mysql_conn.rollback()
         print(e)
@@ -77,7 +81,6 @@ def storage_update_order(order_info, flag=0):
     finally:
         cur.close()
         mysql_conn.close()
-    return True
 
 
 
@@ -99,6 +102,8 @@ def storage_update_storage(order_info):
     param = (goods_id)
     try:
         cur.execute(sql, param)
+        mysql_conn.commit()
+        return True
     except Exception as e:
         mysql_conn.rollback()
         print(e)
@@ -106,5 +111,11 @@ def storage_update_storage(order_info):
     finally:
         cur.close()
         mysql_conn.close()
-    return True
 
+
+if __name__ == '__main__':
+    storage_insert_order(order_info = {
+            "goods_id": 1,
+            "user_id": 2,
+            "order_id": "asd"
+        })

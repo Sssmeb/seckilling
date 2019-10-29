@@ -23,7 +23,7 @@ redis_conn = redis.Redis(connection_pool=redis_pool)
 rabbitmq_conn = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
 
 # 从mysql连接池中获取连接对象
-mysql_pool = PooledDB(pymysql, 100,
+mysql_pool = PooledDB(pymysql, 50,
                       host=MYSQL_HOST,
                       port=MYSQL_PORT,
                       user=MYSQL_USER,
