@@ -7,12 +7,11 @@
 from status import enter_overtime
 from storage import storage_update_order, storage_insert_order, storage_update_storage
 import json
+import time
 
 
 def overtime_order(ch, method, properties, body):
     """
-
-
     :param ch:
     :param method:
     :param properties:
@@ -37,7 +36,7 @@ def insert_order(ch, method, properties, body):
 
 def update_storage(ch, method, properties, body):
     body = json.loads(body)
-    if storage_update_storage(body):
+    if storage_update_storage(body) and storage_update_order(body, 1):
         ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
         ch.basic_nack(delivery_tag=method.delivery_tag)

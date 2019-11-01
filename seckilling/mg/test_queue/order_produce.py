@@ -50,3 +50,9 @@ def enter_order_queue(order_info):
                           body=message)
     print(333333333333333333)
     return True
+
+enter_order_queue(order_info = {
+            "goods_id": 1,
+            "user_id": 2,
+            "order_id": "asd"
+        })

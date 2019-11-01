@@ -4,16 +4,27 @@
 # @File    : test.py
 # @Software: PyCharm
 # @Python3.6
-import time
-def test():
-    for i in range(5):
-        print(i)
-        yield
-        time.sleep(i)
 
-if __name__ == '__main__':
-    test()
+if -1:
+    print(1)
 
+# import sys
+# print(sys.modules.get('json', 'NotFound'))
+#
+# import json
+# print(sys.modules.get('json', 'NotFound'))
+
+
+# import time
+# def test():
+#     for i in range(5):
+#         print(i)
+#         yield
+#         time.sleep(i)
+#
+# if __name__ == '__main__':
+#     test()
+#
 
 
 

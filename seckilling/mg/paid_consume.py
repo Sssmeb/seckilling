@@ -38,3 +38,4 @@ def start_paid_consume(goods_id):
                           queue=queue,
                           auto_ack=False)
 
+    channel.start_consuming()

@@ -60,7 +60,7 @@ def create_order(order_info):
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
 
-    redis_conn.hset("order:"+str(goods_id), str(user_id), str(order_id))
+    redis_conn.hset("order:"+str(goods_id), str(order_id), str(user_id))
     return True
     # else:
     #     return False
@@ -87,10 +87,9 @@ def check_order(order_info):
 
     # 如果已存在超时队列
     if redis_conn.sismember("order:"+str(goods_id)+":"+"overtime", order_id):
-        return False
+        return -1
     else:
-        return user_id == redis_conn.hget("order:"+str(goods_id), order_id)
-
+        return user_id == str(redis_conn.hget("order:" + str(goods_id), order_id), encoding="utf-8")
 
 
 def enter_overtime(order_info):
@@ -156,7 +155,7 @@ def paid_order(order_info):
     :param uuid:
     :return:
     """
-    user_id = order_info.get("user_id")
+    # user_id = order_info.get("user_id")
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
 

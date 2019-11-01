@@ -4,6 +4,7 @@
 """
 
 from flask import Flask, jsonify, request
+from paid_produce import enter_paid_queue
 from status import *
 from mg.order_produce import enter_order_queue
 from mg.overtime_produce import enter_overtime_queue
@@ -64,6 +65,7 @@ def purchase():
             enter_overtime_queue(order_info)
             res["status"] = True
             res["msg"] = "抢购成功，请在15分钟之内付款！"
+            res["order_id"] = str(order_id)
             return jsonify(res)
 
         except Exception as e:
@@ -80,7 +82,7 @@ def purchase():
 
 
 @app.route('/pay')
-def pay(user_id, order_id):
+def pay():
     """
         1. 检查
             - 通过redis检查用户和订单是否对应
@@ -93,7 +95,41 @@ def pay(user_id, order_id):
     :param order_id:
     :return:
     """
-    pass
+    res = {
+        "status": False,
+        "msg": ""
+    }
+
+    user_id = request.args.get("user_id")
+    goods_id = request.args.get("goods_id")
+    order_id = request.args.get("order_id")
+
+    if not user_id or not goods_id or not order_id:
+        res["msg"] = "参数错误"
+        return jsonify(res), 202
+
+    order_info = {
+        "goods_id": goods_id,
+        "user_id": user_id,
+        "order_id": str(order_id)
+    }
+    order_staus = check_order(order_info)
+    if order_staus:
+        if order_staus == -1:
+            res["msg"] = "订单已超时"
+            return jsonify(res), 202
+        else:
+            # 支付函数省略
+            # 直接写入队列和redis
+            enter_paid_queue(order_info)
+            paid_order(order_info)
+            res["status"] = True
+            res["msg"] = "支付成功！！！！"
+            return jsonify(res)
+    else:
+        res["msg"] = "参数错误"
+        return jsonify(res), 202
+
 
 
 if __name__ == '__main__':

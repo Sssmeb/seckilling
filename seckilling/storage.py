@@ -68,8 +68,8 @@ def storage_update_order(order_info, flag=0):
     order_id = order_info.get("order_id")
     goods_id = order_info.get("goods_id")
 
-    sql = "UPDATE order_history SET status=-1 where goods_id=%s and user_id=%s and order_id=%s"
-    param = (goods_id, user_id, order_id)
+    sql = "UPDATE order_history SET status=%s where goods_id=%s and user_id=%s and order_id=%s"
+    param = (str(flag), goods_id, user_id, order_id)
     try:
         cur.execute(sql, param)
         mysql_conn.commit()

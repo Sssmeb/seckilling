@@ -13,7 +13,7 @@
 import pika
 from settings import RABBITMQ_HOST
 from utils import insert_order
-
+import time
 
 def start_order_consume(goods_id):
     rabbitmq_conn = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
@@ -38,6 +38,9 @@ def start_order_consume(goods_id):
                           auto_ack=False)
 
 
+    print(1111111111111111)
+
+    channel.start_consuming()
 
 
 if __name__ == '__main__':
