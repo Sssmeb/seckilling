@@ -22,16 +22,7 @@
 
 """
 from conn import redis_conn
-
-# def counter(goods_id, goods_storage):
-#     """
-#         通过id和库存量 生成一个计数器
-#
-#     :param goods_id:
-#     :param goods_storage:
-#     :return:
-#     """
-#     pass
+from lock import release_lock,acquire_lock_with_timeout
 
 
 def plus_counter(goods_id, storage=1000):
@@ -42,10 +33,16 @@ def plus_counter(goods_id, storage=1000):
     :param storage:
     :return:
     """
-    count = redis_conn.incr("counter:"+str(goods_id))
-    if count > storage:
-        return False
-    return True
+    lock = acquire_lock_with_timeout(redis_conn, goods_id)
+    if lock:
+        count = redis_conn.incr("counter:"+str(goods_id))
+        release_lock(redis_conn, goods_id, lock)
+        if count > storage:
+            return False
+
+        return True
+
+    return False
 
 
 def create_order(order_info):
@@ -110,7 +107,6 @@ def enter_overtime(order_info):
     else:
         redis_conn.sadd("order:"+str(goods_id)+":"+"overtime", order_id)
         return True
-
 
 
 def _is_deal(order_info):
