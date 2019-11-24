@@ -1,4 +1,5 @@
 # seckilling
+
 用python+redis+rabbitmq搭建一个简单的秒杀系统。由于是从项目中抽离出来的一个部分，所以省略了其他业务功能接口，只包含秒杀系统相关程序。
 
 具体架构分析见博客：https://www.jianshu.com/p/ef6d25397f04
@@ -6,8 +7,6 @@
 
 
 ## 基础流程、架构
-
-![1572595727076](C:\Users\smeb\AppData\Roaming\Typora\typora-user-images\1572595727076.png)
 
 ### 基础预设
 
@@ -18,10 +17,6 @@
    - 订单队列
    - 延迟队列（场景如：订单必须在15分钟内支付）
    - 成交队列
-
-
-
-
 
 ### 基础架构
 
@@ -52,9 +47,47 @@
    - 失败或超时直接返回
    - 支付服务结束
 
+## 注
 
+### 计数器为什么不需要分布式锁
 
-系统详解：博客
+起初版本在计数器+1时使用了分布式锁，是想避免并发情况下出现数据不安全的情况。
+
+```python
+def plus_counter(goods_id, storage=1000):
+    lock = acquire_lock_with_timeout(redis_conn, goods_id)
+    if lock:
+        count = redis_conn.incr("counter:"+str(goods_id))
+        release_lock(redis_conn, goods_id, lock)
+        if count > storage:
+            return False
+
+        return True
+
+    return False
+```
+
+但是后续再整理代码，仔细思考得出结论：此处不需要分布式锁。原因是：
+
+1. redis提供的incr命令是原子性的
+2. redis是单线程模型
+3. 此处应用程序不需要获取数据，经过逻辑判断以后再写入数据库。仅是单一语句，获取结果。
+
+如果我们的场景是：
+
+```python
+now = redis.get(xxx)
+if now==yyy:
+	new = 123
+elif now ==www:
+	new = 456
+
+redis.set(xxx, new)
+```
+
+那么由于在我们做逻辑判断是过程中，其他客户端可能会修改xxx的值，导致错误。在这种场景下，从get到set之间就需要加锁，保证这期间数据不会受其他客户端的影响。
+
+但是由于我们计数器应用仅需要执行incr语句，获取返回值。而redis中incr指令是原子性的，且是单线程通过队列串行执行的，所以能保证incr在执行期间不会受到其他线程的影响。所以不需要加锁。
 
 
 

@@ -33,16 +33,16 @@ def plus_counter(goods_id, storage=1000):
     :param storage:
     :return:
     """
-    lock = acquire_lock_with_timeout(redis_conn, goods_id)
-    if lock:
-        count = redis_conn.incr("counter:"+str(goods_id))
-        release_lock(redis_conn, goods_id, lock)
-        if count > storage:
-            return False
+    # lock = acquire_lock_with_timeout(redis_conn, goods_id)
+    # if lock:
+    count = redis_conn.incr("counter:"+str(goods_id))
+    # release_lock(redis_conn, goods_id, lock)
+    if count > storage:
+        return False
 
-        return True
+    return True
 
-    return False
+    # return False
 
 
 def create_order(order_info):
